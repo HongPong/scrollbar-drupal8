@@ -1,0 +1,1186 @@
+diff --git a/README.txt b/README.txt
+index 7e6c3ce..1af5bc3 100644
+--- a/README.txt
++++ b/README.txt
+@@ -1,4 +1,4 @@
+-*Scrollbar Module*
++ *Scrollbar Module*
+ 
+ About:
+ ------
+@@ -6,6 +6,7 @@ About:
+ Scrollbar is a very simple Drupal module to implement the jScrollPane javascript
+ functionality to your Drupal and make the css selectors get a custom jquery 
+ scrollbar.
++
+ jScrollPane is a cross-browser jQuery plugin by Kelvin Luck 
+ (http://jscrollpane.kelvinluck.com) which converts a browser's default 
+ scrollbars (on elements with a relevant overflow property) into an HTML 
+@@ -14,13 +15,15 @@ structure which can be easily skinned with CSS.
+ Installation:
+ -------------
+ 
+-A) Donwload the module and extract it to the modules directory.
++A) Download the module and extract it to the modules directory.
+ B) Go to the jScrollPane download page at 
+ http://jscrollpane.kelvinluck.com/index.html#download
+ 
+ UPDATE: You can download all the required and complementary files from my 
+ github repo at https://github.com/tplcom/jscrollpane/archive/master.zip 
+-and upload them into libraries/jscrollpane folder (see below).
++and upload them into libraries/jscrollpane folder (see below). 
++
++libraries should be at the root level of your Drupal installation.
+ 
+ [Required files]
+ 
+@@ -37,9 +40,9 @@ libraries/jscrollpane folder.
+ libraries/jscrollpane folder.
+ 
+ C) On your theme css add one or more styles for the element you want to get the 
+-custom jquery scrollbar.
++custom jQuery scrollbar.
+ For example, if you want to apply the .jScrollPane() function to the 
+-.field-name-body element just add this CSS
++.field-name-body element just add this CSS:
+ 
+ .field-name-body {
+   height: 200px;
+@@ -59,5 +62,7 @@ the jScrollPage settings page (http://jscrollpane.kelvinluck.com/settings.html).
+ Credits:
+ --------
+ 
+-Many thanks to Kelvin Luck (http://kelvinluck.com) for this excellant 
++Many thanks to Kelvin Luck (http://kelvinluck.com) for this excellent 
+ jquery plugin.
++
++Ported to Drupal 8 by Dan Feidt ( https://drupal.org/u/hongpong )
+\ No newline at end of file
+diff --git a/config/install/scrollbar.settings.yml b/config/install/scrollbar.settings.yml
+new file mode 100644
+index 0000000..f1b613f
+--- /dev/null
++++ b/config/install/scrollbar.settings.yml
+@@ -0,0 +1,29 @@
++enable: 0
++showArrows: false
++maintainPosition: true
++stickToBottom: false
++stickToRight: false
++autoReinitialise: false
++autoReinitialiseDelay: 500
++verticalDragMinHeight: 0
++verticalDragMaxHeight: 99999
++horizontalDragMinWidth: 0
++horizontalDragMaxWidth: 99999
++# contentWidth: undefined
++animateScroll: false
++animateDuration: 300
++animateEase: 'Linear'
++hijackInternalLinks: false
++verticalGutter: 4
++horizontalGutter: 4
++mouseWheelSpeed: 10
++arrowButtonSpeed: 10
++arrowRepeatFreq: 100
++arrowScrollOnHover: false
++verticalArrowPositions: 'split'
++horizontalArrowPositions: 'split'
++enableKeyboardNavigation: true
++hideFocus: false
++clickOnTrack: true
++trackClickSpeed: 30
++trackClickRepeatFreq: 100
+diff --git a/scrollbar.admin.inc b/scrollbar.admin.inc
+index a8f4901..3c228d6 100644
+--- a/scrollbar.admin.inc
++++ b/scrollbar.admin.inc
+@@ -12,7 +12,7 @@ function scrollbar_admin_settings() {
+   $form['scrollbar_element'] = array(
+     '#type' => 'textfield',
+     '#title' => t('Elements to get the jScrollPane function'),
+-    '#default_value' => variable_get('scrollbar_element', '.field-name-body'),
++    '#default_value' => \Drupal::config('scrollbar.settings')->get('scrollbar_element'),
+     '#size' => 100,
+     '#required' => TRUE,
+     '#maxlength' => 800,
+@@ -21,7 +21,7 @@ function scrollbar_admin_settings() {
+   $form['scrollbar_showArrows'] = array(
+     '#type' => 'select',
+     '#title' => t('Show arrows for scrollbar'),
+-    '#default_value' => variable_get('scrollbar_showArrows', 'true'),
++    '#default_value' => \Drupal::config('scrollbar.settings')->get('scrollbar_showArrows'),
+     '#options' => array(
+       'true' => t('yes'),
+       'false' => t('no'),
+@@ -57,7 +57,7 @@ function scrollbar_admin_settings() {
+   $form['scrollbar_advancedOptions']['scrollbar_generalOptions']['scrollbar_arrowScrollOnHover'] = array(
+     '#type' => 'select',
+     '#title' => t('Scroll element when mouse is over arrows'),
+-    '#default_value' => variable_get('scrollbar_arrowScrollOnHover', 'false'),
++    '#default_value' => \Drupal::config('scrollbar.settings')->get('scrollbar_arrowScrollOnHover'),
+     '#options' => array(
+       'true' => t('true'),
+       'false' => t('false'),
+@@ -67,7 +67,7 @@ function scrollbar_admin_settings() {
+   $form['scrollbar_advancedOptions']['scrollbar_generalOptions']['scrollbar_mouseWheelSpeed'] = array(
+     '#type' => 'textfield',
+     '#title' => t('Mousewheel speed multiplier'),
+-    '#default_value' => variable_get('scrollbar_mouseWheelSpeed', 10),
++    '#default_value' => \Drupal::config('scrollbar.settings')->get('scrollbar_mouseWheelSpeed'),
+     '#size' => 5,
+     '#maxlength' => 5,
+     '#element_validate' => array('scrollbar_validate_integer_positive_zero'),
+@@ -76,7 +76,7 @@ function scrollbar_admin_settings() {
+   $form['scrollbar_advancedOptions']['scrollbar_generalOptions']['scrollbar_arrowButtonSpeed'] = array(
+     '#type' => 'textfield',
+     '#title' => t('Arrow buttons speed multiplier'),
+-    '#default_value' => variable_get('scrollbar_arrowButtonSpeed', 10),
++    '#default_value' => \Drupal::config('scrollbar.settings')->get('scrollbar_arrowButtonSpeed'),
+     '#size' => 5,
+     '#maxlength' => 5,
+     '#element_validate' => array('scrollbar_validate_integer_positive_zero'),
+@@ -85,7 +85,7 @@ function scrollbar_admin_settings() {
+   $form['scrollbar_advancedOptions']['scrollbar_generalOptions']['scrollbar_arrowRepeatFreq'] = array(
+     '#type' => 'textfield',
+     '#title' => t('Arrow buttons Repeat frequency, in ms'),
+-    '#default_value' => variable_get('scrollbar_arrowRepeatFreq', 100),
++    '#default_value' => \Drupal::config('scrollbar.settings')->get('scrollbar_arrowRepeatFreq'),
+     '#size' => 5,
+     '#maxlength' => 5,
+     '#element_validate' => array('scrollbar_validate_integer_positive_zero'),
+@@ -94,7 +94,7 @@ function scrollbar_admin_settings() {
+   $form['scrollbar_advancedOptions']['scrollbar_horizontialOptions']['scrollbar_horizontialGutter'] = array(
+     '#type' => 'textfield',
+     '#title' => t('Horizontial scrolling gap, in px'),
+-    '#default_value' => variable_get('scrollbar_horizontialGutter', 5),
++    '#default_value' => \Drupal::config('scrollbar.settings')->get('scrollbar_horizontialGutter'),
+     '#size' => 5,
+     '#maxlength' => 5,
+     '#element_validate' => array('scrollbar_validate_integer_positive_zero'),
+@@ -103,7 +103,7 @@ function scrollbar_admin_settings() {
+   $form['scrollbar_advancedOptions']['scrollbar_verticalOptions']['scrollbar_verticalGutter'] = array(
+     '#type' => 'textfield',
+     '#title' => t('Vertical scrolling gap, in px'),
+-    '#default_value' => variable_get('scrollbar_verticalGutter', 5),
++    '#default_value' => \Drupal::config('scrollbar.settings')->get('scrollbar_verticalGutter'),
+     '#size' => 5,
+     '#maxlength' => 5,
+     '#element_validate' => array('scrollbar_validate_integer_positive_zero'),
+@@ -112,7 +112,7 @@ function scrollbar_admin_settings() {
+   $form['scrollbar_advancedOptions']['scrollbar_verticalOptions']['scrollbar_verticalDragMinHeight'] = array(
+     '#type' => 'textfield',
+     '#title' => t('Vertical Drag min height, in px'),
+-    '#default_value' => variable_get('scrollbar_verticalDragMinHeight', 0),
++    '#default_value' => \Drupal::config('scrollbar.settings')->get('scrollbar_verticalDragMinHeight'),
+     '#size' => 5,
+     '#maxlength' => 5,
+     '#element_validate' => array('scrollbar_validate_integer_positive_zero'),
+@@ -121,7 +121,7 @@ function scrollbar_admin_settings() {
+   $form['scrollbar_advancedOptions']['scrollbar_verticalOptions']['scrollbar_verticalDragMaxHeight'] = array(
+     '#type' => 'textfield',
+     '#title' => t('Vertical Drag max height, in px'),
+-    '#default_value' => variable_get('scrollbar_verticalDragMaxHeight', 99999),
++    '#default_value' => \Drupal::config('scrollbar.settings')->get('scrollbar_verticalDragMaxHeight'),
+     '#size' => 5,
+     '#maxlength' => 5,
+     '#element_validate' => array('scrollbar_validate_integer_positive_zero'),
+@@ -130,7 +130,7 @@ function scrollbar_admin_settings() {
+   $form['scrollbar_advancedOptions']['scrollbar_verticalOptions']['scrollbar_verticalDragMinWidth'] = array(
+     '#type' => 'textfield',
+     '#title' => t('Vertical Drag min width, in px'),
+-    '#default_value' => variable_get('scrollbar_verticalDragMinWidth', 0),
++    '#default_value' => \Drupal::config('scrollbar.settings')->get('scrollbar_verticalDragMinWidth'),
+     '#size' => 5,
+     '#maxlength' => 5,
+     '#element_validate' => array('scrollbar_validate_integer_positive_zero'),
+@@ -139,7 +139,7 @@ function scrollbar_admin_settings() {
+   $form['scrollbar_advancedOptions']['scrollbar_verticalOptions']['scrollbar_verticalDragMaxWidth'] = array(
+     '#type' => 'textfield',
+     '#title' => t('Vertical Drag max width, in px'),
+-    '#default_value' => variable_get('scrollbar_verticalDragMaxWidth', 99999),
++    '#default_value' => \Drupal::config('scrollbar.settings')->get('scrollbar_verticalDragMaxWidth'),
+     '#size' => 5,
+     '#maxlength' => 5,
+     '#element_validate' => array('scrollbar_validate_integer_positive_zero'),
+@@ -148,7 +148,7 @@ function scrollbar_admin_settings() {
+   $form['scrollbar_advancedOptions']['scrollbar_horizontialOptions']['scrollbar_horizontialDragMinHeight'] = array(
+     '#type' => 'textfield',
+     '#title' => t('Horizontial Drag min height, in px'),
+-    '#default_value' => variable_get('scrollbar_horizontialDragMinHeight', 0),
++    '#default_value' => \Drupal::config('scrollbar.settings')->get('scrollbar_horizontialDragMinHeight'),
+     '#size' => 5,
+     '#maxlength' => 5,
+     '#element_validate' => array('scrollbar_validate_integer_positive_zero'),
+@@ -157,7 +157,7 @@ function scrollbar_admin_settings() {
+   $form['scrollbar_advancedOptions']['scrollbar_horizontialOptions']['scrollbar_horizontialDragMaxHeight'] = array(
+     '#type' => 'textfield',
+     '#title' => t('Horizontial Drag max height, in px'),
+-    '#default_value' => variable_get('scrollbar_horizontialDragMaxHeight', 99999),
++    '#default_value' => \Drupal::config('scrollbar.settings')->get('scrollbar_horizontialDragMaxHeight'),
+     '#size' => 5,
+     '#maxlength' => 5,
+     '#element_validate' => array('scrollbar_validate_integer_positive_zero'),
+@@ -166,7 +166,7 @@ function scrollbar_admin_settings() {
+   $form['scrollbar_advancedOptions']['scrollbar_horizontialOptions']['scrollbar_horizontialDragMinWidth'] = array(
+     '#type' => 'textfield',
+     '#title' => t('Horizontial Drag min width, in px'),
+-    '#default_value' => variable_get('scrollbar_horizontialDragMinWidth', 0),
++    '#default_value' => \Drupal::config('scrollbar.settings')->get('scrollbar_horizontialDragMinWidth'),
+     '#size' => 5,
+     '#maxlength' => 5,
+     '#element_validate' => array('scrollbar_validate_integer_positive_zero'),
+@@ -175,7 +175,7 @@ function scrollbar_admin_settings() {
+   $form['scrollbar_advancedOptions']['scrollbar_horizontialOptions']['scrollbar_horizontialDragMaxWidth'] = array(
+     '#type' => 'textfield',
+     '#title' => t('Horizontial Drag max width, in px'),
+-    '#default_value' => variable_get('scrollbar_horizontialDragMaxWidth', 99999),
++    '#default_value' => \Drupal::config('scrollbar.settings')->get('scrollbar_horizontialDragMaxWidth'),
+     '#size' => 5,
+     '#maxlength' => 5,
+     '#element_validate' => array('scrollbar_validate_integer_positive_zero'),
+@@ -184,7 +184,7 @@ function scrollbar_admin_settings() {
+   $form['scrollbar_advancedOptions']['scrollbar_verticalOptions']['scrollbar_verticalArrowPositions'] = array(
+     '#type' => 'select',
+     '#title' => t('Show the vertical arrows relative to the vertical track'),
+-    '#default_value' => variable_get('scrollbar_verticalArrowPositions', 'split'),
++    '#default_value' => \Drupal::config('scrollbar.settings')->get('scrollbar_verticalArrowPositions'),
+     '#options' => array(
+       'split' => t('split'),
+       'before' => t('before'),
+@@ -196,7 +196,7 @@ function scrollbar_admin_settings() {
+   $form['scrollbar_advancedOptions']['scrollbar_horizontialOptions']['scrollbar_horizontialArrowPositions'] = array(
+     '#type' => 'select',
+     '#title' => t('Show the horizontial arrows relative to the horizontial track'),
+-    '#default_value' => variable_get('scrollbar_horizontialArrowPositions', 'split'),
++    '#default_value' => \Drupal::config('scrollbar.settings')->get('scrollbar_horizontialArrowPositions'),
+     '#options' => array(
+       'split' => t('split'),
+       'before' => t('before'),
+@@ -208,7 +208,7 @@ function scrollbar_admin_settings() {
+   $form['scrollbar_advancedOptions']['scrollbar_generalOptions']['scrollbar_autoReinitialise'] = array(
+     '#type' => 'select',
+     '#title' => t('Reinitialise scrollbar'),
+-    '#default_value' => variable_get('scrollbar_autoReinitialise', 'false'),
++    '#default_value' => \Drupal::config('scrollbar.settings')->get('scrollbar_autoReinitialise'),
+     '#options' => array(
+       'true' => t('true'),
+       'false' => t('false'),
+@@ -220,7 +220,7 @@ function scrollbar_admin_settings() {
+   $form['scrollbar_advancedOptions']['scrollbar_generalOptions']['scrollbar_autoReinitialiseDelay'] = array(
+     '#type' => 'textfield',
+     '#title' => t('Reinitialise Delay in ms'),
+-    '#default_value' => variable_get('scrollbar_autoReinitialiseDelay', 500),
++    '#default_value' => \Drupal::config('scrollbar.settings')->get('scrollbar_autoReinitialiseDelay'),
+     '#size' => 5,
+     '#maxlength' => 5,
+     '#element_validate' => array('scrollbar_validate_integer_positive_zero'),
+diff --git a/scrollbar.info b/scrollbar.info
+deleted file mode 100644
+index a953ed1..0000000
+--- a/scrollbar.info
++++ /dev/null
+@@ -1,5 +0,0 @@
+-name = Scrollbar
+-description = Custom Scrollbar using jScollPane jQuery plugin.
+-core = 7.x
+-configure = admin/config/user-interface/scrollbar
+-dependencies[] = libraries
+diff --git a/scrollbar.info.yml b/scrollbar.info.yml
+new file mode 100644
+index 0000000..e50fe7b
+--- /dev/null
++++ b/scrollbar.info.yml
+@@ -0,0 +1,5 @@
++name: Scrollbar
++description: 'Custom Scrollbar using jScollPane jQuery plugin.'
++core: 8.x
++dependencies:
++type: module
+diff --git a/scrollbar.install b/scrollbar.install
+index 9a2be8a..febb387 100644
+--- a/scrollbar.install
++++ b/scrollbar.install
+@@ -10,11 +10,11 @@
+  */
+ function scrollbar_requirements($phase) {
+   $requirements = array();
+-  $t = get_t();
++  $t = 't';
+ 
+   if ($phase == 'runtime') {
+-    $installed_1 = file_exists(libraries_get_path('jscrollpane') . '/jquery.jscrollpane.min.js');
+-    $installed_2 = file_exists(libraries_get_path('jscrollpane') . '/jquery.jscrollpane.css');
++    $installed_1 = file_exists(DRUPAL_ROOT . '/libraries/jscrollpane/jquery.jscrollpane.min.js');
++    $installed_2 = file_exists(DRUPAL_ROOT . '/libraries/jscrollpane/jquery.jscrollpane.css');
+ 
+     if (($installed_1)&&($installed_2)) {
+       $requirements['scrollbar'] = array(
+@@ -27,7 +27,7 @@ function scrollbar_requirements($phase) {
+       $requirements['scrollbar'] = array(
+         'title' => 'scrollbar',
+         'severity' => REQUIREMENT_ERROR,
+-        'value' => $t('You must download jScrollPane files and upload them in the appropiate directories. See at <a href="@configuration-page">scrollbar Configuration page</a> for more details.', array('@configuration-page' => '/admin/config/user-interface/scrollbar')),
++        'value' => $t('You must download jScrollPane files and upload them in the appropriate directories. See at <a href="@configuration-page">scrollbar Configuration page</a> for more details.', array('@configuration-page' => '/admin/config/user-interface/scrollbar')),
+       );
+     }
+     return $requirements;
+@@ -38,7 +38,9 @@ function scrollbar_requirements($phase) {
+  * Implements hook_uninstall().
+  */
+ function scrollbar_uninstall() {
+-  db_delete('variable')
+-  ->condition('name', 'scrollbar\_%', 'LIKE')
+-  ->execute();
++  // @FIXME
++// db_delete('variable')
++//   ->condition('name', 'scrollbar\_%', 'LIKE')
++//   ->execute();
++
+ }
+diff --git a/scrollbar.js b/scrollbar.js
+index 6e71cda..4323545 100644
+--- a/scrollbar.js
++++ b/scrollbar.js
+@@ -1,31 +1,48 @@
+-(function ($) {
++(function ($, Drupal, drupalSettings) {
++
++  'use strict';
++
+   Drupal.behaviors.scrollbar = {
+     attach: function (context, settings) {
+-      var $element = settings.scrollbar.element;
++      var $element = drupalSettings.scrollbar.element;
+       $($element + ", .demo-class").jScrollPane({
+         // jScrollpane needs clear true or false, not quoted text so we add this if statement
+-        showArrows: (settings.scrollbar.showArrows === 'true'),
+-        arrowScrollOnHover: (settings.scrollbar.arrowScrollOnHover === 'true'),
+-        mouseWheelSpeed: settings.scrollbar.mouseWheelSpeed,
+-        arrowButtonSpeed: settings.scrollbar.arrowButtonSpeed,
+-        arrowRepeatFreq: settings.scrollbar.arrowRepeatFreq,
+-        horizontialGutter: settings.scrollbar.horizontialGutter,
+-        verticalGutter: settings.scrollbar.verticalGutter,
+-        verticalDragMinHeight: settings.scrollbar.verticalDragMinHeight,
+-        verticalDragMaxHeight: settings.scrollbar.verticalDragMaxHeight,
+-        verticalDragMinWidth: settings.scrollbar.verticalDragMinWidth,
+-        verticalDragMaxWidth: settings.scrollbar.verticalDragMaxWidth,
+-        horizontialDragMinHeight: settings.scrollbar.horizontialDragMinHeight,
+-        horizontialDragMaxHeight: settings.scrollbar.horizontialDragMaxHeight,
+-        horizontialDragMinWidth: settings.scrollbar.horizontialDragMinWidth,
+-        horizontialDragMaxWidth: settings.scrollbar.horizontialDragMaxWidth,
+-        verticalArrowPositions: settings.scrollbar.verticalArrowPositions,
+-        horizontialArrowPositions: settings.scrollbar.horizontialArrowPositions,
+-        autoReinitialise: (settings.scrollbar.autoReinitialise === "true"),
+-        autoReinitialiseDelay: settings.scrollbar.autoReinitialiseDelay
++        showArrows: (drupalSettings.scrollbar.showArrows === 'true'),
++        arrowScrollOnHover: (drupalSettings.scrollbar.arrowScrollOnHover === 'true'),
++        maintainPosition: drupalSettings.scrollbar.maintainPosition,
++        stickToBottom: drupalSettings.scrollbar.stickToBottom,
++        stickToRight: drupalSettings.scrollbar.stickToRight,
++        contentWidth: drupalSettings.scrollbar.contentWidth,
++        animateScroll: drupalSettings.scrollbar.animateScroll,
++        animateDuration: drupalSettings.scrollbar.animateDuration,
++        animateEase: drupalSettings.scrollbar.animateEase,
++        hijackInternalLinks: drupalSettings.scrollbar.hijackInternalLinks,
++        enableKeyboardNavigation: drupalSettings.scrollbar.enableKeyboardNavigation,
++        hideFocus: drupalSettings.scrollbar.hideFocus,
++        clickOnTrack: drupalSettings.scrollbar.clickOnTrack,
++        trackClickSpeed: drupalSettings.scrollbar.trackClickSpeed,
++        trackClickRepeatFreq: drupalSettings.scrollbar.trackClickRepeatFreq,
++
++        mouseWheelSpeed: drupalSettings.scrollbar.mouseWheelSpeed,
++        arrowButtonSpeed: drupalSettings.scrollbar.arrowButtonSpeed,
++        arrowRepeatFreq: drupalSettings.scrollbar.arrowRepeatFreq,
++        horizontalGutter: drupalSettings.scrollbar.horizontalGutter,
++        verticalGutter: drupalSettings.scrollbar.verticalGutter,
++        verticalDragMinHeight: drupalSettings.scrollbar.verticalDragMinHeight,
++        verticalDragMaxHeight: drupalSettings.scrollbar.verticalDragMaxHeight,
++        verticalDragMinWidth: drupalSettings.scrollbar.verticalDragMinWidth,
++        verticalDragMaxWidth: drupalSettings.scrollbar.verticalDragMaxWidth,
++        horizontalDragMinHeight: drupalSettings.scrollbar.horizontalDragMinHeight,
++        horizontalDragMaxHeight: drupalSettings.scrollbar.horizontalDragMaxHeight,
++        horizontalDragMinWidth: drupalSettings.scrollbar.horizontalDragMinWidth,
++        horizontalDragMaxWidth: drupalSettings.scrollbar.horizontalDragMaxWidth,
++        verticalArrowPositions: drupalSettings.scrollbar.verticalArrowPositions,
++        horizontalArrowPositions: drupalSettings.scrollbar.horizontialArrowPositions,
++        autoReinitialise: (drupalSettings.scrollbar.autoReinitialise === "true"),
++        autoReinitialiseDelay: drupalSettings.scrollbar.autoReinitialiseDelay
+       });
+     // Uncomment the line below for debugging.
+     // console.log(settings.scrollbar);
+     }
+   };
+-}(jQuery));
++})(jQuery, Drupal, drupalSettings);
+diff --git a/scrollbar.libraries.yml b/scrollbar.libraries.yml
+new file mode 100644
+index 0000000..b5e5f12
+--- /dev/null
++++ b/scrollbar.libraries.yml
+@@ -0,0 +1,9 @@
++scrollbar:
++  version: VERSION
++  js:
++    /libraries/jscrollpane/jquery.jscrollpane.min.js: {}
++    /libraries/jscrollpane/jquery.mousewheel.js: {}
++    /libraries/jscrollpane/mwheelIntent.js: {}
++    scrollbar.js: {}
++  css:
++    /libraries/jscrollpane/jquery.jscrollpane.css: {}
+\ No newline at end of file
+diff --git a/scrollbar.links.menu.yml b/scrollbar.links.menu.yml
+new file mode 100644
+index 0000000..07f675c
+--- /dev/null
++++ b/scrollbar.links.menu.yml
+@@ -0,0 +1,5 @@
++scrollbar.admin_settings:
++    route_name: scrollbar.admin_settings
++    title: Scrollbar
++    description: 'Adjust the settings of the scrollbar module'
++    parent: system.admin_config_ui
+diff --git a/scrollbar.make b/scrollbar.make
+deleted file mode 100644
+index 841785e..0000000
+--- a/scrollbar.make
++++ /dev/null
+@@ -1,9 +0,0 @@
+-; jscrollpane
+-
+-api = 2
+-core = 7.x
+-
+-libraries[jscrollpane][download][type] = "get"
+-libraries[jscrollpane][download][url] = "https://github.com/tplcom/jscrollpane/zipball/master"
+-libraries[jscrollpane][directory_name] = "jscrollpane"
+-libraries[jscrollpane][type] = "library"
+diff --git a/scrollbar.module b/scrollbar.module
+index 77892bb..bbff99a 100644
+--- a/scrollbar.module
++++ b/scrollbar.module
+@@ -19,13 +19,7 @@ function scrollbar_help($path, $arg) {
+ 
+       $download_link = "<p>" . t('Please go to !download-link and download this file into libraries/jscrollpane folder.',
+         array(
+-          '!download-link' => l(t('main jScrollPane page'), "http://jscrollpane.kelvinluck.com/index.html",
+-          array(
+-            'attributes' => array(
+-              'target' => '_blank',
+-            ),
+-            'fragment' => 'download')
+-          ),
++          '!download-link' => \Drupal::l(t('main jScrollPane page'), \Drupal\Core\Url::fromUri("http://jscrollpane.kelvinluck.com/index.html")),
+         )
+       ) . "</p>";
+ 
+@@ -79,55 +73,111 @@ function scrollbar_init() {
+ 
+   // Add mousewheel and mwheelIntent if they exist.
+   if ($installed_3) {
+-    drupal_add_js($basepath . '/jquery.mousewheel.js');
++    // @FIXME
++// The Assets API has totally changed. CSS, JavaScript, and libraries are now
++// attached directly to render arrays using the #attached property.
++// 
++// 
++// @see https://www.drupal.org/node/2169605
++// @see https://www.drupal.org/node/2408597
++// drupal_add_js($basepath . '/jquery.mousewheel.js');
++
+   }
+   if ($installed_4) {
+-    drupal_add_js($basepath . '/mwheelIntent.js');
++    // @FIXME
++// The Assets API has totally changed. CSS, JavaScript, and libraries are now
++// attached directly to render arrays using the #attached property.
++// 
++// 
++// @see https://www.drupal.org/node/2169605
++// @see https://www.drupal.org/node/2408597
++// drupal_add_js($basepath . '/mwheelIntent.js');
++
+   }
+ 
+   // Add required CSS for scrollbar.
+   if ($installed_2) {
+-    drupal_add_css($basepath . '/jquery.jscrollpane.css');
++    // @FIXME
++// The Assets API has totally changed. CSS, JavaScript, and libraries are now
++// attached directly to render arrays using the #attached property.
++// 
++// 
++// @see https://www.drupal.org/node/2169605
++// @see https://www.drupal.org/node/2408597
++// drupal_add_css($basepath . '/jquery.jscrollpane.css');
++
+   }
+ 
+   if ($installed_1) {
+     // Add jquery ui library from Drupal core.
+-    drupal_add_library('system', 'ui');
++    // @FIXME
++// The Assets API has totally changed. CSS, JavaScript, and libraries are now
++// attached directly to render arrays using the #attached property.
++// 
++// 
++// @see https://www.drupal.org/node/2169605
++// @see https://www.drupal.org/node/2408597
++// drupal_add_library('system', 'ui');
++
+ 
+     // Add jquery.jscrollpane.min.js.
+-    drupal_add_js($basepath . '/jquery.jscrollpane.min.js');
++    // @FIXME
++// The Assets API has totally changed. CSS, JavaScript, and libraries are now
++// attached directly to render arrays using the #attached property.
++// 
++// 
++// @see https://www.drupal.org/node/2169605
++// @see https://www.drupal.org/node/2408597
++// drupal_add_js($basepath . '/jquery.jscrollpane.min.js');
++
+ 
+     // Create settings for scrollbar.js.
+-    drupal_add_js(
+-      array(
+-        'scrollbar' =>
+-        array(
+-          'element'                   => variable_get('scrollbar_element', '.field-name-body'),
+-          'showArrows'                => variable_get('scrollbar_showArrows', TRUE),
+-          'mouseWheelSpeed'           => variable_get('scrollbar_mouseWheelSpeed', 10),
+-          'arrowButtonSpeed'          => variable_get('scrollbar_arrowButtonSpeed', 10),
+-          'arrowRepeatFreq'           => variable_get('scrollbar_arrowRepeatFreq', 100),
+-          'horizontialGutter'         => variable_get('scrollbar_horizontialGutter', 4),
+-          'verticalGutter'            => variable_get('scrollbar_verticalGutter', 4),
+-          'verticalDragMinHeight'     => variable_get('scrollbar_verticalDragMinHeight', 0),
+-          'verticalDragMaxHeight'     => variable_get('scrollbar_verticalDragMaxHeight', 99999),
+-          'verticalDragMinWidth'      => variable_get('scrollbar_verticalDragMinWidth', 0),
+-          'verticalDragMaxWidth'      => variable_get('scrollbar_verticalDragMaxWidth', 99999),
+-          'horizontialDragMinHeight'  => variable_get('scrollbar_horizontialDragMinHeight', 0),
+-          'horizontialDragMaxHeight'  => variable_get('scrollbar_horizontialDragMaxHeight', 99999),
+-          'horizontialDragMinWidth'   => variable_get('scrollbar_horizontialDragMinWidth', 0),
+-          'horizontialDragMaxWidth'   => variable_get('scrollbar_horizontialDragMaxWidth', 99999),
+-          'arrowScrollOnHover'        => variable_get('scrollbar_arrowScrollOnHover', TRUE),
+-          'verticalArrowPositions'    => variable_get('scrollbar_verticalArrowPositions', 'split'),
+-          'horizontialArrowPositions' => variable_get('scrollbar_horizontialArrowPositions', 'split'),
+-          'autoReinitialise'          => variable_get('scrollbar_autoReinitialise', FALSE),
+-          'autoReinitialiseDelay'     => variable_get('scrollbar_autoReinitialiseDelay', 500),
+-        ),
+-      ), 'setting'
+-    );
++    // @FIXME
++// The Assets API has totally changed. CSS, JavaScript, and libraries are now
++// attached directly to render arrays using the #attached property.
++// 
++// 
++// @see https://www.drupal.org/node/2169605
++// @see https://www.drupal.org/node/2408597
++// drupal_add_js(
++//       array(
++//         'scrollbar' =>
++//         array(
++//           'element'                   => variable_get('scrollbar_element', '.field-name-body'),
++//           'showArrows'                => variable_get('scrollbar_showArrows', TRUE),
++//           'mouseWheelSpeed'           => variable_get('scrollbar_mouseWheelSpeed', 10),
++//           'arrowButtonSpeed'          => variable_get('scrollbar_arrowButtonSpeed', 10),
++//           'arrowRepeatFreq'           => variable_get('scrollbar_arrowRepeatFreq', 100),
++//           'horizontialGutter'         => variable_get('scrollbar_horizontialGutter', 4),
++//           'verticalGutter'            => variable_get('scrollbar_verticalGutter', 4),
++//           'verticalDragMinHeight'     => variable_get('scrollbar_verticalDragMinHeight', 0),
++//           'verticalDragMaxHeight'     => variable_get('scrollbar_verticalDragMaxHeight', 99999),
++//           'verticalDragMinWidth'      => variable_get('scrollbar_verticalDragMinWidth', 0),
++//           'verticalDragMaxWidth'      => variable_get('scrollbar_verticalDragMaxWidth', 99999),
++//           'horizontialDragMinHeight'  => variable_get('scrollbar_horizontialDragMinHeight', 0),
++//           'horizontialDragMaxHeight'  => variable_get('scrollbar_horizontialDragMaxHeight', 99999),
++//           'horizontialDragMinWidth'   => variable_get('scrollbar_horizontialDragMinWidth', 0),
++//           'horizontialDragMaxWidth'   => variable_get('scrollbar_horizontialDragMaxWidth', 99999),
++//           'arrowScrollOnHover'        => variable_get('scrollbar_arrowScrollOnHover', TRUE),
++//           'verticalArrowPositions'    => variable_get('scrollbar_verticalArrowPositions', 'split'),
++//           'horizontialArrowPositions' => variable_get('scrollbar_horizontialArrowPositions', 'split'),
++//           'autoReinitialise'          => variable_get('scrollbar_autoReinitialise', FALSE),
++//           'autoReinitialiseDelay'     => variable_get('scrollbar_autoReinitialiseDelay', 500),
++//         ),
++//       ), 'setting'
++//     );
++
+ 
+     // Add scrollbar.js with above settings.
+-    drupal_add_js($basepath_mod . '/scrollbar.js');
++    // @FIXME
++// The Assets API has totally changed. CSS, JavaScript, and libraries are now
++// attached directly to render arrays using the #attached property.
++// 
++// 
++// @see https://www.drupal.org/node/2169605
++// @see https://www.drupal.org/node/2408597
++// drupal_add_js($basepath_mod . '/scrollbar.js');
++
+   }
+ }
+ 
+@@ -156,3 +206,51 @@ function scrollbar_validate_integer_positive_zero($element, &$form_state) {
+     form_error($element, t('%name must be a positive integer or zero.', array('%name' => $element['#title'])));
+   }
+ }
++
++/**
++ * Implements hook_page_attachments().
++ * @param $page
++ */
++function scrollbar_page_attachments(&$page) {
++  $settings = [];
++  $config = \Drupal::config('scrollbar.settings');
++  if ($config->get('enable')) {
++    $settings['element'] = $config->get('element');
++    $settings['showArrows'] = $config->get('showArrows');
++    $settings['maintainPosition'] = $config->get('maintainPosition'); //new
++    $settings['stickToBottom'] = $config->get('stickToBottom'); //new
++    $settings['stickToRight'] = $config->get('stickToRight'); //new
++    $settings['contentWidth'] = $config->get('contentWidth'); //new
++    $settings['animateScroll'] = $config->get('animateScroll'); //new
++    $settings['animateDuration'] = $config->get('animateDuration'); //new
++    $settings['animateEase'] = $config->get('animateEase'); //new
++    $settings['hijackInternalLinks'] = $config->get('hijackInternalLinks'); //new
++    $settings['enableKeyboardNavigation'] = $config->get('enableKeyboardNavigation'); //new
++    $settings['hideFocus'] = $config->get('hideFocus'); //new
++    $settings['clickOnTrack'] = $config->get('clickOnTrack'); //new
++    $settings['trackClickSpeed'] = $config->get('trackClickSpeed'); //new
++    $settings['trackClickRepeatFreq'] = $config->get('trackClickRepeatFreq'); //new
++
++    $settings['mouseWheelSpeed'] = $config->get('mouseWheelSpeed');
++    $settings['arrowButtonSpeed'] = $config->get('arrowButtonSpeed');
++    $settings['arrowRepeatFreq'] = $config->get('arrowRepeatFreq');
++    $settings['horizontalGutter'] = $config->get('horizontalGutter');
++    $settings['verticalGutter'] = $config->get('verticalGutter');
++    $settings['verticalDragMinHeight'] = $config->get('verticalDragMinHeight');
++    $settings['verticalDragMaxHeight'] = $config->get('verticalDragMaxHeight');
++    $settings['verticalDragMinWidth'] = $config->get('verticalDragMinWidth');
++    $settings['verticalDragMaxWidth'] = $config->get('verticalDragMaxWidth');
++    $settings['horizontalDragMinHeight'] = $config->get('horizontalDragMinHeight');
++    $settings['horizontalDragMaxHeight'] = $config->get('horizontalDragMaxHeight');
++    $settings['horizontalDragMinWidth'] = $config->get('horizontalDragMinWidth');
++    $settings['horizontalDragMaxWidth'] = $config->get('horizontalDragMaxWidth');
++    $settings['arrowScrollOnHover'] = $config->get('arrowScrollOnHover');
++    $settings['verticalArrowPositions'] = $config->get('verticalArrowPositions');
++    $settings['horizontalArrowPositions'] = $config->get('horizontalArrowPositions');
++    $settings['autoReinitialise'] = $config->get('autoReinitialise');
++    $settings['autoReinitialiseDelay'] = $config->get('autoReinitialiseDelay');
++
++    $page['#attached']['drupalSettings']['scrollbar'] = $settings;
++    $page['#attached']['library'][] = 'scrollbar/scrollbar';
++  }
++}
+\ No newline at end of file
+diff --git a/scrollbar.routing.yml b/scrollbar.routing.yml
+new file mode 100644
+index 0000000..66045de
+--- /dev/null
++++ b/scrollbar.routing.yml
+@@ -0,0 +1,7 @@
++scrollbar.admin_settings:
++    path: /admin/config/user-interface/scrollbar
++    defaults:
++        _title: Scrollbar
++        _form: \Drupal\scrollbar\Form\ScrollbarAdminSettings
++    requirements:
++        _permission: 'administer site configuration'
+diff --git a/scrollbar.services.yml b/scrollbar.services.yml
+new file mode 100644
+index 0000000..4a21ccc
+--- /dev/null
++++ b/scrollbar.services.yml
+@@ -0,0 +1,6 @@
++services:
++    init_subscriber:
++        class: Drupal\scrollbar\EventSubscriber\InitSubscriber
++        tags:
++            -
++                name: event_subscriber
+diff --git a/src/EventSubscriber/InitSubscriber.php b/src/EventSubscriber/InitSubscriber.php
+new file mode 100644
+index 0000000..8aaa969
+--- /dev/null
++++ b/src/EventSubscriber/InitSubscriber.php
+@@ -0,0 +1,141 @@
++<?php /**
++ * @file
++ * Contains \Drupal\scrollbar\EventSubscriber\InitSubscriber.
++ */
++
++namespace Drupal\scrollbar\EventSubscriber;
++
++use Symfony\Component\HttpKernel\KernelEvents;
++use Symfony\Component\EventDispatcher\EventSubscriberInterface;
++
++class InitSubscriber implements EventSubscriberInterface {
++
++  /**
++   * {@inheritdoc}
++   */
++  public static function getSubscribedEvents() {
++    return [KernelEvents::REQUEST => ['onEvent', 0]];
++  }
++
++  public function onEvent() {
++
++    // Check if necessary files exist.
++    $basepath = (DRUPAL_ROOT . '/libraries/jscrollpane');
++    $basepath_mod = drupal_get_path('module', 'scrollbar');
++
++    $installed_1 = file_exists($basepath . '/jquery.jscrollpane.min.js');
++    $installed_2 = file_exists($basepath . '/jquery.jscrollpane.css');
++    $installed_3 = file_exists($basepath . '/jquery.mousewheel.js');
++    $installed_4 = file_exists($basepath . '/mwheelIntent.js');
++
++    // Add mousewheel and mwheelIntent if they exist.
++    if ($installed_3) {
++      // @FIXME
++// The Assets API has totally changed. CSS, JavaScript, and libraries are now
++// attached directly to render arrays using the #attached property.
++// 
++// 
++// @see https://www.drupal.org/node/2169605
++// @see https://www.drupal.org/node/2408597
++// drupal_add_js($basepath . '/jquery.mousewheel.js');
++
++    }
++    if ($installed_4) {
++      // @FIXME
++// The Assets API has totally changed. CSS, JavaScript, and libraries are now
++// attached directly to render arrays using the #attached property.
++// 
++// 
++// @see https://www.drupal.org/node/2169605
++// @see https://www.drupal.org/node/2408597
++// drupal_add_js($basepath . '/mwheelIntent.js');
++
++    }
++
++    // Add required CSS for scrollbar.
++    if ($installed_2) {
++      // @FIXME
++// The Assets API has totally changed. CSS, JavaScript, and libraries are now
++// attached directly to render arrays using the #attached property.
++// 
++// 
++// @see https://www.drupal.org/node/2169605
++// @see https://www.drupal.org/node/2408597
++// drupal_add_css($basepath . '/jquery.jscrollpane.css');
++
++    }
++
++    if ($installed_1) {
++      // Add jquery ui library from Drupal core.
++    // @FIXME
++// The Assets API has totally changed. CSS, JavaScript, and libraries are now
++// attached directly to render arrays using the #attached property.
++// 
++// 
++// @see https://www.drupal.org/node/2169605
++// @see https://www.drupal.org/node/2408597
++// drupal_add_library('system', 'ui');
++
++
++      // Add jquery.jscrollpane.min.js.
++    // @FIXME
++// The Assets API has totally changed. CSS, JavaScript, and libraries are now
++// attached directly to render arrays using the #attached property.
++// 
++// 
++// @see https://www.drupal.org/node/2169605
++// @see https://www.drupal.org/node/2408597
++// drupal_add_js($basepath . '/jquery.jscrollpane.min.js');
++
++
++      // Create settings for scrollbar.js.
++    // @FIXME
++// The Assets API has totally changed. CSS, JavaScript, and libraries are now
++// attached directly to render arrays using the #attached property.
++// 
++// 
++// @see https://www.drupal.org/node/2169605
++// @see https://www.drupal.org/node/2408597
++// drupal_add_js(
++//       array(
++//         'scrollbar' =>
++//         array(
++//           'element'                   => variable_get('scrollbar_element', '.field-name-body'),
++//           'showArrows'                => variable_get('scrollbar_showArrows', TRUE),
++//           'mouseWheelSpeed'           => variable_get('scrollbar_mouseWheelSpeed', 10),
++//           'arrowButtonSpeed'          => variable_get('scrollbar_arrowButtonSpeed', 10),
++//           'arrowRepeatFreq'           => variable_get('scrollbar_arrowRepeatFreq', 100),
++//           'horizontialGutter'         => variable_get('scrollbar_horizontialGutter', 4),
++//           'verticalGutter'            => variable_get('scrollbar_verticalGutter', 4),
++//           'verticalDragMinHeight'     => variable_get('scrollbar_verticalDragMinHeight', 0),
++//           'verticalDragMaxHeight'     => variable_get('scrollbar_verticalDragMaxHeight', 99999),
++//           'verticalDragMinWidth'      => variable_get('scrollbar_verticalDragMinWidth', 0),
++//           'verticalDragMaxWidth'      => variable_get('scrollbar_verticalDragMaxWidth', 99999),
++//           'horizontialDragMinHeight'  => variable_get('scrollbar_horizontialDragMinHeight', 0),
++//           'horizontialDragMaxHeight'  => variable_get('scrollbar_horizontialDragMaxHeight', 99999),
++//           'horizontialDragMinWidth'   => variable_get('scrollbar_horizontialDragMinWidth', 0),
++//           'horizontialDragMaxWidth'   => variable_get('scrollbar_horizontialDragMaxWidth', 99999),
++//           'arrowScrollOnHover'        => variable_get('scrollbar_arrowScrollOnHover', TRUE),
++//           'verticalArrowPositions'    => variable_get('scrollbar_verticalArrowPositions', 'split'),
++//           'horizontialArrowPositions' => variable_get('scrollbar_horizontialArrowPositions', 'split'),
++//           'autoReinitialise'          => variable_get('scrollbar_autoReinitialise', FALSE),
++//           'autoReinitialiseDelay'     => variable_get('scrollbar_autoReinitialiseDelay', 500),
++//         ),
++//       ), 'setting'
++//     );
++
++
++      // Add scrollbar.js with above settings.
++    // @FIXME
++// The Assets API has totally changed. CSS, JavaScript, and libraries are now
++// attached directly to render arrays using the #attached property.
++// 
++// 
++// @see https://www.drupal.org/node/2169605
++// @see https://www.drupal.org/node/2408597
++// drupal_add_js($basepath_mod . '/scrollbar.js');
++
++    }
++  }
++
++}
+diff --git a/src/Form/ScrollbarAdminSettings.php b/src/Form/ScrollbarAdminSettings.php
+new file mode 100644
+index 0000000..7c3e3c9
+--- /dev/null
++++ b/src/Form/ScrollbarAdminSettings.php
+@@ -0,0 +1,334 @@
++<?php
++
++/**
++ * @file
++ * Contains \Drupal\scrollbar\Form\ScrollbarAdminSettings.
++ */
++
++namespace Drupal\scrollbar\Form;
++
++use Drupal\Core\Form\ConfigFormBase;
++use Drupal\Core\Form\FormStateInterface;
++use Drupal\Core\Render\Element;
++
++class ScrollbarAdminSettings extends ConfigFormBase {
++
++  /**
++   * {@inheritdoc}
++   */
++  public function getFormId() {
++    return 'scrollbar_admin_settings';
++  }
++
++  /**
++   * {@inheritdoc}
++   */
++  public function submitForm(array &$form, FormStateInterface $form_state) {
++    $config = $this->config('scrollbar.settings');
++
++    foreach (Element::children($form) as $variable) {
++      $config->set($variable, $form_state->getValue($form[$variable]['#parents']));
++    }
++    $config->save();
++
++    if (method_exists($this, '_submitForm')) {
++      $this->_submitForm($form, $form_state);
++    }
++
++    parent::submitForm($form, $form_state);
++  }
++
++  /**
++   * {@inheritdoc}
++   */
++  protected function getEditableConfigNames() {
++    return ['scrollbar.settings'];
++  }
++
++  public function buildForm(array $form, \Drupal\Core\Form\FormStateInterface $form_state) {
++    $config = $this->config('scrollbar.settings');
++
++    $form['enable'] = array(
++      '#type' => 'checkbox',
++      '#title' => $this->t('Enable scrollbar'),
++      '#description' => $this->t('Enable scrollbar + jscrollpane functionality on your site.'),
++      '#default_value' => $config->get('enable'),
++    );
++    $form['element'] = [
++      '#type' => 'textfield',
++      '#title' => t('Elements to get the jScrollPane function'),
++      '#default_value' => \Drupal::config('scrollbar.settings')->get('element'),
++      '#size' => 100,
++      '#required' => TRUE,
++      '#maxlength' => 800,
++      '#description' => "<p>" . t('Set here the DOM elements that will get the scrollbar function.') . "</p><p>" . t('Seperate elements with a comma. Example <code>@code</code>', [
++        '@code' => '.field-name-body, #mydiv'
++        ]) . "</p><p><strong>" . t("Do not use a trailing comma") . "</strong></p><p>" . t("Finally, don't forget to use the proper CSS. Example <code>@code</code>", [
++        '@code' => ".field-name-body {overflow:auto; \n height: 200px;}"
++        ]) . "</p>",
++    ];
++    $form['showArrows'] = [
++      '#type' => 'select',
++      '#title' => t('Show arrows for scrollbar'),
++      '#default_value' => \Drupal::config('scrollbar.settings')->get('showArrows'),
++      '#options' => [
++        'true' => t('yes'),
++        'false' => t('no'),
++      ],
++      '#description' => t('Whether arrows should be shown on the generated scroll pane. When set to false only the scrollbar track and drag will be shown, if set to true then arrows buttons will also be shown.'),
++    ];
++    $form['scrollbar_advancedOptions'] = [
++      '#type' => 'fieldset',
++      '#title' => t('Advanced options'),
++      '#collapsible' => TRUE,
++      '#collapsed' => TRUE,
++    ];
++    $form['scrollbar_advancedOptions']['generalOptions'] = [
++      '#type' => 'fieldset',
++      '#title' => t('General options'),
++      '#collapsible' => TRUE,
++      '#collapsed' => TRUE,
++    ];
++    $form['scrollbar_advancedOptions']['verticalOptions'] = [
++      '#type' => 'fieldset',
++      '#title' => t('Vertical scrollbar options'),
++      '#collapsible' => TRUE,
++      '#collapsed' => TRUE,
++      '#description' => "<p>" . t('The size of the drag elements is based on the proportion of the size of the content to the size of the viewport but is contrained within the minimum and maximum dimensions given') . "</p>",
++    ];
++    $form['scrollbar_advancedOptions']['horizontalOptions'] = [
++      '#type' => 'fieldset',
++      '#title' => t('Horizontal scrollbar options'),
++      '#collapsible' => TRUE,
++      '#collapsed' => TRUE,
++      '#description' => "<p>" . t('The size of the drag elements is based on the proportion of the size of the content to the size of the viewport but is contrained within the minimum and maximum dimensions given') . "</p>",
++    ];
++    $form['scrollbar_advancedOptions']['generalOptions']['arrowScrollOnHover'] = [
++      '#type' => 'select',
++      '#title' => t('Scroll element when mouse is over arrows'),
++      '#default_value' => \Drupal::config('scrollbar.settings')->get('arrowScrollOnHover'),
++      '#options' => [
++        'true' => t('true'),
++        'false' => t('false'),
++      ],
++      '#description' => t('Whether the arrow buttons should cause the scrollbar to scroll while you are hovering over them.'),
++    ];
++    $form['scrollbar_advancedOptions']['generalOptions']['mouseWheelSpeed'] = [
++      '#type' => 'textfield',
++      '#title' => t('Mousewheel speed multiplier'),
++      '#default_value' => \Drupal::config('scrollbar.settings')->get('mouseWheelSpeed'),
++      '#size' => 5,
++      '#maxlength' => 5,
++      '#element_validate' => [
++        'scrollbar_validate_integer_positive_zero'
++        ],
++      '#description' => t("A multiplier which is used to control the amount that the scrollpane scrolls each time the mouse wheel is turned."),
++    ];
++    $form['scrollbar_advancedOptions']['generalOptions']['arrowButtonSpeed'] = [
++      '#type' => 'textfield',
++      '#title' => t('Arrow buttons speed multiplier'),
++      '#default_value' => \Drupal::config('scrollbar.settings')->get('arrowButtonSpeed'),
++      '#size' => 5,
++      '#maxlength' => 5,
++      '#element_validate' => [
++        'scrollbar_validate_integer_positive_zero'
++        ],
++      '#description' => t('A multiplier which is used to control the amount that the scrollpane scrolls each time on of the arrow buttons is pressed.'),
++    ];
++    $form['scrollbar_advancedOptions']['generalOptions']['arrowRepeatFreq'] = [
++      '#type' => 'textfield',
++      '#title' => t('Arrow buttons Repeat frequency, in ms'),
++      '#default_value' => \Drupal::config('scrollbar.settings')->get('arrowRepeatFreq'),
++      '#size' => 5,
++      '#maxlength' => 5,
++      '#element_validate' => [
++        'scrollbar_validate_integer_positive_zero'
++        ],
++      '#description' => t('The number of milliseconds between each repeated scroll event when the mouse is held down over one of the arrow keys.'),
++    ];
++    $form['scrollbar_advancedOptions']['horizontalOptions']['horizontalGutter'] = [
++      '#type' => 'textfield',
++      '#title' => t('Horizontal scrolling gap, in px'),
++      '#default_value' => \Drupal::config('scrollbar.settings')->get('horizontalGutter'),
++      '#size' => 5,
++      '#maxlength' => 5,
++      '#element_validate' => [
++        'scrollbar_validate_integer_positive_zero'
++        ],
++      '#description' => t('Introduces a gap between the scrolling content and the scrollbar itself.'),
++    ];
++    $form['scrollbar_advancedOptions']['verticalOptions']['verticalGutter'] = [
++      '#type' => 'textfield',
++      '#title' => t('Vertical scrolling gap, in px'),
++      '#default_value' => \Drupal::config('scrollbar.settings')->get('scrollbar_verticalGutter'),
++      '#size' => 5,
++      '#maxlength' => 5,
++      '#element_validate' => [
++        'scrollbar_validate_integer_positive_zero'
++        ],
++      '#description' => t('Introduces a gap between the scrolling content and the scrollbar itself.'),
++    ];
++    $form['scrollbar_advancedOptions']['verticalOptions']['verticalDragMinHeight'] = [
++      '#type' => 'textfield',
++      '#title' => t('Vertical Drag min height, in px'),
++      '#default_value' => \Drupal::config('scrollbar.settings')->get('scrollbar_verticalDragMinHeight'),
++      '#size' => 5,
++      '#maxlength' => 5,
++      '#element_validate' => [
++        'scrollbar_validate_integer_positive_zero'
++        ],
++      '#description' => "<p>" . t('The smallest height that the vertical drag can have') . "</p>",
++    ];
++    $form['scrollbar_advancedOptions']['verticalOptions']['verticalDragMaxHeight'] = [
++      '#type' => 'textfield',
++      '#title' => t('Vertical Drag max height, in px'),
++      '#default_value' => \Drupal::config('scrollbar.settings')->get('scrollbar_verticalDragMaxHeight'),
++      '#size' => 5,
++      '#maxlength' => 5,
++      '#element_validate' => [
++        'scrollbar_validate_integer_positive_zero'
++        ],
++      '#description' => "<p>" . t('The maximum height that the vertical drag can have') . "</p>",
++    ];
++    $form['scrollbar_advancedOptions']['verticalOptions']['verticalDragMinWidth'] = [
++      '#type' => 'textfield',
++      '#title' => t('Vertical Drag min width, in px'),
++      '#default_value' => \Drupal::config('scrollbar.settings')->get('scrollbar_verticalDragMinWidth'),
++      '#size' => 5,
++      '#maxlength' => 5,
++      '#element_validate' => [
++        'scrollbar_validate_integer_positive_zero'
++        ],
++      '#description' => "<p>" . t('The smallest width that the vertical drag can have') . "</p>",
++    ];
++    $form['scrollbar_advancedOptions']['verticalOptions']['verticalDragMaxWidth'] = [
++      '#type' => 'textfield',
++      '#title' => t('Vertical Drag max width, in px'),
++      '#default_value' => \Drupal::config('scrollbar.settings')->get('scrollbar_verticalDragMaxWidth'),
++      '#size' => 5,
++      '#maxlength' => 5,
++      '#element_validate' => [
++        'scrollbar_validate_integer_positive_zero'
++        ],
++      '#description' => "<p>" . t('The maximum width that the vertical drag can have') . "</p>",
++    ];
++    $form['scrollbar_advancedOptions']['horizontalOptions']['horizontalDragMinHeight'] = [
++      '#type' => 'textfield',
++      '#title' => t('Horizontal Drag min height, in px'),
++      '#default_value' => \Drupal::config('scrollbar.settings')->get('scrollbar_horizontalDragMinHeight'),
++      '#size' => 5,
++      '#maxlength' => 5,
++      '#element_validate' => [
++        'scrollbar_validate_integer_positive_zero'
++        ],
++      '#description' => "<p>" . t('The smallest height that the horizontal drag can have') . "</p>",
++    ];
++    $form['scrollbar_advancedOptions']['horizontalOptions']['horizontalDragMaxHeight'] = [
++      '#type' => 'textfield',
++      '#title' => t('Horizontal Drag max height, in px'),
++      '#default_value' => \Drupal::config('scrollbar.settings')->get('scrollbar_horizontalDragMaxHeight'),
++      '#size' => 5,
++      '#maxlength' => 5,
++      '#element_validate' => [
++        'scrollbar_validate_integer_positive_zero'
++        ],
++      '#description' => "<p>" . t('The maximum height that the horizontal drag can have') . "</p>",
++    ];
++    $form['scrollbar_advancedOptions']['horizontalOptions']['scrollbar_horizontalDragMinWidth'] = [
++      '#type' => 'textfield',
++      '#title' => t('Horizontal Drag min width, in px'),
++      '#default_value' => \Drupal::config('scrollbar.settings')->get('scrollbar_horizontalDragMinWidth'),
++      '#size' => 5,
++      '#maxlength' => 5,
++      '#element_validate' => [
++        'scrollbar_validate_integer_positive_zero'
++        ],
++      '#description' => "<p>" . t('The smallest width that the horizontal drag can have') . "</p>",
++    ];
++    $form['scrollbar_advancedOptions']['horizontalOptions']['scrollbar_horizontalDragMaxWidth'] = [
++      '#type' => 'textfield',
++      '#title' => t('Horizontal Drag max width, in px'),
++      '#default_value' => \Drupal::config('scrollbar.settings')->get('scrollbar_horizontalDragMaxWidth'),
++      '#size' => 5,
++      '#maxlength' => 5,
++      '#element_validate' => [
++        'scrollbar_validate_integer_positive_zero'
++        ],
++      '#description' => "<p>" . t('The maximum width that the horizontal drag can have') . "</p>",
++    ];
++    $form['scrollbar_advancedOptions']['verticalOptions']['scrollbar_verticalArrowPositions'] = [
++      '#type' => 'select',
++      '#title' => t('Show the vertical arrows relative to the vertical track'),
++      '#default_value' => \Drupal::config('scrollbar.settings')->get('scrollbar_verticalArrowPositions'),
++      '#options' => [
++        'split' => t('split'),
++        'before' => t('before'),
++        'after' => t('after'),
++        'os' => t('os'),
++      ],
++      '#description' => t('Where the vertical arrows should appear relative to the vertical track.'),
++    ];
++    $form['scrollbar_advancedOptions']['horizontalOptions']['scrollbar_horizontalArrowPositions'] = [
++      '#type' => 'select',
++      '#title' => t('Show the horizontal arrows relative to the horizontal track'),
++      '#default_value' => \Drupal::config('scrollbar.settings')->get('scrollbar_horizontalArrowPositions'),
++      '#options' => [
++        'split' => t('split'),
++        'before' => t('before'),
++        'after' => t('after'),
++        'os' => t('os'),
++      ],
++      '#description' => t('Where the horizontal arrows should appear relative to the horizontal track.'),
++    ];
++    $form['scrollbar_advancedOptions']['scrollbar_generalOptions']['scrollbar_autoReinitialise'] = [
++      '#type' => 'select',
++      '#title' => t('Reinitialise scrollbar'),
++      '#default_value' => \Drupal::config('scrollbar.settings')->get('scrollbar_autoReinitialise'),
++      '#options' => [
++        'true' => t('true'),
++        'false' => t('false'),
++      ],
++      '#description' => "<p>" . t('Whether scrollbar should automatically reinitialise itself periodically after you have initially initialised it.') . "</p>" . "<p>" . t('This can help with instances when the size of the content of the scrollpane (or the surrounding element) changes.') . "</p>" . "<p>" . t('However, it does involve an overhead of running a javascript function on a timer so it is recommended only to activate where necessary.') . "</p>",
++    ];
++    $form['scrollbar_advancedOptions']['scrollbar_generalOptions']['scrollbar_autoReinitialiseDelay'] = [
++      '#type' => 'textfield',
++      '#title' => t('Reinitialise Delay in ms'),
++      '#default_value' => \Drupal::config('scrollbar.settings')->get('scrollbar_autoReinitialiseDelay'),
++      '#size' => 5,
++      '#maxlength' => 5,
++      '#element_validate' => [
++        'scrollbar_validate_integer_positive_zero'
++        ],
++      '#description' => t('The number of milliseconds between each reinitialisation (if autoReinitialise is true).'),
++    ];
++    return parent::buildForm($form, $form_state);
++  }
++
++  //   /**
++  //  * Form submission handler.
++  //  *
++  //  * @param array $form
++  //  *   An associative array containing the structure of the form.
++  //  * @param \Drupal\Core\Form\FormStateInterface $form_state
++  //  *   The current state of the form.
++  //  */
++  // public function submitForm(array &$form, FormStateInterface $form_state) {
++  //   $this->config('scrollbar.settings')
++  //     ->set('enable', $form_state->getValue('enable'))
++  //     ->set('element', $form_state->getValue('element'))
++  //     ->set('showArrows', (bool) $form_state->getValue('showArrows'))
++  //     ->set('arrowScrollOnHover', (int) $form_state->getValue('arrowScrollOnHover'))
++  //     ->set('mouseWheelSpeed', (int) $form_state->getValue('mouseWheelSpeed'))
++  //     ->set('arrowButtonSpeed', $form_state->getValue('arrowButtonSpeed'))
++  //     // ->set('initial_class', $form_state->getValue('initial_class'))
++  //     // ->set('pinned_class', $form_state->getValue('pinned_class'))
++  //     // ->set('unpinned_class', $form_state->getValue('unpinned_class'))
++  //     // ->set('top_class', $form_state->getValue('top_class'))
++  //     // ->set('not_top_class', $form_state->getValue('not_top_class'))
++  //     ->save();
++
++  //   parent::submitForm($form, $form_state);
++  // }
++
++
++}
